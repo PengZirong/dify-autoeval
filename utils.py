@@ -2,49 +2,44 @@
 Author: Pengzirong Peng.Zirong@outlook.com
 Date: 2024-09-06 14:21:58
 LastEditors: Pengzirong
-LastEditTime: 2024-09-06 14:24:12
+LastEditTime: 2024-09-06 14:43:00
 Description: file content
 '''
 from fetch_langfuse import FetchLangfuse
 
-class Utils(FetchLangfuse):
-    def __init__(self):
-        super().__init__()
 
-    def get_selected_observations(self, rules):
-        all_data = []
-        sessions = self.fetch_sessions()['data']
-        for session in sessions:
-            session_id = session['id']
-            traces = self.fetch_session_traces(
-                self.fetch_session(session_id)
-            )
-            for trace in traces:
-                trace_id = trace['id']
-                observations = self.fetch_trace_observations(trace_id)
-                selected_ids = self.select_ids(observations, rules)
-                if selected_ids:
-                    for selected_id in selected_ids:
-                        all_data.append(
-                            self.fetch_observation(selected_id[0])
-                        )
-        return all_data
+def process_llm_batch(llm_observations):
+    """Process a batch of LLM observations.
 
-def get_selected_observations(fetch_langfuse, rules):
-    all_data = []
-    sessions = fetch_langfuse.fetch_sessions()['data']
-    for session in sessions:
-        session_id = session['id']
-        traces = fetch_langfuse.fetch_session_traces(
-            fetch_langfuse.fetch_session(session_id)
-        )
-        for trace in traces:
-            trace_id = trace['id']
-            observations = fetch_langfuse.fetch_trace_observations(trace_id)
-            selected_ids = fetch_langfuse.select_ids(observations, rules)
-            if selected_ids:
-                for selected_id in selected_ids:
-                    all_data.append(
-                        fetch_langfuse.fetch_observation(selected_id[0])
-                    )
-    return all_data
+    Args:
+        llm_observations (list): A list of LLM observations.
+
+    Returns:
+        dict: A dictionary containing the processed evaluation batch.
+    """
+    evaluation_batch = {
+        "question": [],
+        "contexts": [],
+        "answer": [],
+        "trace_id": [],
+        "observation_id": []
+    }
+    for observation in llm_observations:
+        d = dict(observation)
+        question = ""
+        context = []
+        for item in d["input"]:
+            if item["role"] == "user":
+                question = item["content"]
+            elif item["role"] == "system":
+                context.append(item["content"])
+
+        evaluation_batch["question"].append(question)
+        evaluation_batch["contexts"].append(context)
+
+        if "output" in d and "text" in d["output"]:
+            evaluation_batch["answer"].append(d["output"]["text"])
+        evaluation_batch["trace_id"].append(observation["traceId"])
+        evaluation_batch["observation_id"].append(observation["id"])
+    
+    return evaluation_batch
