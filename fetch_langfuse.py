@@ -17,9 +17,9 @@ class FetchLangfuse:
         self.secret_key = secret_key
         self.public_key = public_key
         self.host = host
-        print(f"secret_key: {self.secret_key}")
-        print(f"public_key: {self.public_key}")
-        print(f"host: {self.host}")
+        # print(f"secret_key: {self.secret_key}")
+        # print(f"public_key: {self.public_key}")
+        # print(f"host: {self.host}")
         
     def fetch_sessions(self):
         """
@@ -143,6 +143,20 @@ class FetchLangfuse:
                 )
         return traces_idx
     
+    def fetch_trace_observations(self, trace_id):
+        """
+        Fetch observations for a specific trace
+
+        Args:
+            trace_id (str): The ID of the trace
+
+        Returns:
+            list: A list of observations
+        """
+        trace = self.fetch_trace(trace_id)
+        observations = trace["observations"]
+        return observations
+    
     def fetch_trace_observations_idx(self, trace):
         """
         Fetch observation indices from a specific trace
@@ -206,4 +220,22 @@ class FetchLangfuse:
                     observation = self.fetch_observation(observation_id)
                     node_observations.append(observation)
         return node_observations
+    
+    def fetch_trace_scores(self, trace_id):
+        """
+        Fetch scores for a specific trace
+
+        Args:
+            trace_id (str): The ID of the trace
+
+        Returns:
+            dict: The JSON response containing the scores
+        """
+        trace = self.fetch_trace(trace_id)
+        scores = trace["scores"]
+        return scores
+    
+    
+    
+
 
