@@ -2,7 +2,7 @@
 Author: Pengzirong Peng.Zirong@outlook.com
 Date: 2024-09-06 14:21:58
 LastEditors: Pengzirong
-LastEditTime: 2024-09-06 16:59:37
+LastEditTime: 2024-09-06 17:23:54
 Description: file content
 '''
 # from fetch_langfuse import FetchLangfuse
@@ -76,7 +76,7 @@ def process_retrieval_batch(retrieval_observations):
     
     return evaluation_batch
 
-def pull_scores_to_langfuse(langfuse, scores, scores_keys):
+def pull_scores_to_langfuse(langfuse, scores, scores_keys, node_name=None):
     """Pull scores to Langfuse.
 
     Args:
@@ -90,7 +90,7 @@ def pull_scores_to_langfuse(langfuse, scores, scores_keys):
         for key in scores_keys:
             trace_id = row['trace_id']
             observation_id = row['observation_id']
-            name = key
+            name = f"{key}-{node_name}" if node_name else key
             score = row[key]
             langfuse.score(
                 id=f"{trace_id}-{observation_id}-{name}",
