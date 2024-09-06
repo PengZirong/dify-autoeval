@@ -235,7 +235,47 @@ class FetchLangfuse:
         scores = trace["scores"]
         return scores
     
-    
-    
+    def get_selected_observations(self, rules):
+        """
+        Fetches selected observations based on given rules.
 
+        Args:
+            rules (list): A list of rules to filter the observations
 
+        Returns:
+            list: A list of selected observations
+        """
+        selected_observations = []
+        sessions = self.fetch_sessions()['data']
+        for session in sessions:
+            session_id = session['id']
+            traces = self.fetch_session_traces(self.fetch_session(session_id))
+            for trace in traces:
+                trace_id = trace['id']
+                observations = self.fetch_trace_observations(trace_id)
+                selected_ids = self.select_ids(observations, rules)
+                if selected_ids:
+                    selected_observations.extend([self.fetch_observation(selected_id[0]) for selected_id in selected_ids])
+        return selected_observations
+    
+    def get_sessions_selected_observations(self, sessions_ids, rules):
+        """
+        Fetches selected observations based on given rules from specific sessions.
+
+        Args:
+            sessions_ids (list): A list of session IDs
+            rules (list): A list of rules to filter the observations
+
+        Returns:
+            list: A list of selected observations
+        """
+        selected_observations = []
+        for session_id in sessions_ids:
+            traces = self.fetch_session_traces(self.fetch_session(session_id))
+            for trace in traces:
+                trace_id = trace['id']
+                observations = self.fetch_trace_observations(trace_id)
+                selected_ids = self.select_ids(observations, rules)
+                if selected_ids:
+                    selected_observations.extend([self.fetch_observation(selected_id[0]) for selected_id in selected_ids])
+        return selected_observations
