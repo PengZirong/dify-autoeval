@@ -43,3 +43,27 @@ def process_llm_batch(llm_observations):
         evaluation_batch["observation_id"].append(observation["id"])
     
     return evaluation_batch
+
+def pull_scores_to_langfuse(langfuse, scores, scores_keys):
+    """Pull scores to Langfuse.
+
+    Args:
+        langfuse (Langfuse): The Langfuse object.
+        scores (dict): The scores dictionary.
+        scores_keys (list): The list of keys for evaluation.
+
+    """
+    from datetime import datetime
+    for key in scores_keys:
+        trace_id = scores['trace_id']
+        observation_id = scores['observation_id']
+        name = key
+        score = scores[key]
+        langfuse.score(
+            id=f"{trace_id}-{observation_id}-{name}",
+            trace_id = trace_id,
+            observation_id=observation_id,
+            name=name,
+            value=score,
+            comment=f"Last updated at {datetime.now().strftime('%Y/%m/%d %H:%M:%S')}"
+        )
