@@ -2,7 +2,7 @@
 Author: Pengzirong Peng.Zirong@outlook.com
 Date: 2024-09-06 14:21:58
 LastEditors: Pengzirong
-LastEditTime: 2024-09-06 14:43:00
+LastEditTime: 2024-09-06 16:13:15
 Description: file content
 '''
 from fetch_langfuse import FetchLangfuse
@@ -54,16 +54,17 @@ def pull_scores_to_langfuse(langfuse, scores, scores_keys):
 
     """
     from datetime import datetime
-    for key in scores_keys:
-        trace_id = scores['trace_id']
-        observation_id = scores['observation_id']
-        name = key
-        score = scores[key]
-        langfuse.score(
-            id=f"{trace_id}-{observation_id}-{name}",
-            trace_id = trace_id,
-            observation_id=observation_id,
-            name=name,
-            value=score,
-            comment=f"Last updated at {datetime.now().strftime('%Y/%m/%d %H:%M:%S')}"
-        )
+    for _, row in scores.iterrows():
+        for key in scores_keys:
+            trace_id = row['trace_id']
+            observation_id = row['observation_id']
+            name = key
+            score = row[key]
+            langfuse.score(
+                id=f"{trace_id}-{observation_id}-{name}",
+                trace_id = trace_id,
+                observation_id=observation_id,
+                name=name,
+                value=score,
+                comment=f"Last updated at {datetime.now().strftime('%Y/%m/%d %H:%M:%S')}"
+            )
