@@ -2,7 +2,7 @@
 Author: Pengzirong Peng.Zirong@outlook.com
 Date: 2024-09-06 14:56:52
 LastEditors: Pengzirong
-LastEditTime: 2024-09-06 16:08:56
+LastEditTime: 2024-09-06 16:37:31
 Description: file content
 '''
 
@@ -31,18 +31,21 @@ class LLMmetrics:
             
         return scores
     
-    def ragas_metrics(self, ragas_metrics: Dict):
-        """Compute metrics using the ragas library.
+    def ragas_metrics(self, ragas_metrics: List, llm=None, embedding_model=None):
+        """Compute metrics using the specified ragas metrics.
 
         Args:
-            ragas_metrics (Dict): A dictionary containing the metrics for ragas evaluation.
+            ragas_metrics (List): A list of ragas metrics to compute.
+            llm (type, optional): The llm parameter. Defaults to None.
+            embedding_model (type, optional): The embedding model parameter. Defaults to None.
 
         Returns:
             pd.DataFrame: A DataFrame containing the computed metrics.
         """
         from ragas import evaluate
         ragas_dataset = pd.DataFrame(ragas_metrics)
-        scores = evaluate(ragas_dataset, metrics=ragas_metrics)
+        scores = evaluate(ragas_dataset, metrics=ragas_metrics,
+                          llm=llm, embedding_model=embedding_model)
         scores.to_pandas()
         scores["trace_id"] = self.evaluation_batch["trace_id"]
         scores["observation_id"] = self.evaluation_batch["observation_id"]
