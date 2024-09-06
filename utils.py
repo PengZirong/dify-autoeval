@@ -2,10 +2,10 @@
 Author: Pengzirong Peng.Zirong@outlook.com
 Date: 2024-09-06 14:21:58
 LastEditors: Pengzirong
-LastEditTime: 2024-09-06 16:13:15
+LastEditTime: 2024-09-06 16:30:51
 Description: file content
 '''
-from fetch_langfuse import FetchLangfuse
+# from fetch_langfuse import FetchLangfuse
 
 
 def process_llm_batch(llm_observations):
