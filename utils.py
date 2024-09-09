@@ -100,5 +100,26 @@ def pull_scores_to_langfuse(langfuse, scores, scores_keys, node_name=None):
                 value=score,
                 comment=f"Last updated at {datetime.now().strftime('%Y/%m/%d %H:%M:%S')}"
             )
+            
+def pull_score_to_langfuse(langfuse, score, trace_id, observation_id, name):
+    """Pull a single score to Langfuse.
+
+    Args:
+        langfuse (Langfuse): The Langfuse object.
+        score (float): The score.
+        trace_id (str): The trace ID.
+        observation_id (str): The observation ID.
+        name (str): The name of the score.
+
+    """
+    from datetime import datetime
+    langfuse.score(
+        id=f"{trace_id}-{observation_id}-{name}",
+        trace_id = trace_id,
+        observation_id=observation_id,
+        name=name,
+        value=score,
+        comment=f"Last updated at {datetime.now().strftime('%Y/%m/%d %H:%M:%S')}"
+    )
 
 
