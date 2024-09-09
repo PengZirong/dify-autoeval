@@ -2,7 +2,7 @@
 Author: Pengzirong Peng.Zirong@outlook.com
 Date: 2024-09-06 14:21:58
 LastEditors: Pengzirong
-LastEditTime: 2024-09-06 17:38:34
+LastEditTime: 2024-09-09 14:56:46
 Description: file content
 '''
 # from fetch_langfuse import FetchLangfuse
@@ -122,4 +122,32 @@ def pull_score_to_langfuse(langfuse, score, trace_id, observation_id, name):
         comment=f"Last updated at {datetime.now().strftime('%Y/%m/%d %H:%M:%S')}"
     )
 
+async def async_pull_score_to_langfuse(score, trace_id, observation_id, name):
+    """Pull a single score to Langfuse asynchronously.
 
+    Args:
+        score (float): The score.
+        trace_id (str): The trace ID.
+        observation_id (str): The observation ID.
+        name (str): The name of the score.
+
+    """
+    from datetime import datetime
+    url = f"{os.getenv('LANGFUSE_HOST')}/api/score"
+    screct_key = os.getenv('LANGFUSE_SECRET_KEY')
+    public_key = os.getenv('LANGFUSE_PUBLIC_KEY')
+    headers = {
+        "Content-Type": "application/json"
+    }
+    payload = {
+        "id": f"{trace_id}-{observation_id}-{name}",
+        "traceId": trace_id,
+        "name": name,
+        "value": score,
+        "observationId": observation_id,
+        "comment": f"Last updated at {datetime.now().strftime('%Y/%m/%d %H:%M:%S')}",
+    }
+    async with aiohttp.ClientSession() as session:
+        async with session.post(url, auth=aiohttp.BasicAuth(public_key, screct_key), headers=headers, data=json.dumps(payload)) as response:
+            return await response.text()
+    
