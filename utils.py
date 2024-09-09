@@ -2,7 +2,7 @@
 Author: Pengzirong Peng.Zirong@outlook.com
 Date: 2024-09-06 14:21:58
 LastEditors: Pengzirong
-LastEditTime: 2024-09-06 17:23:54
+LastEditTime: 2024-09-06 17:38:34
 Description: file content
 '''
 # from fetch_langfuse import FetchLangfuse
@@ -100,3 +100,5 @@ def pull_scores_to_langfuse(langfuse, scores, scores_keys, node_name=None):
                 value=score,
                 comment=f"Last updated at {datetime.now().strftime('%Y/%m/%d %H:%M:%S')}"
             )
+
+
