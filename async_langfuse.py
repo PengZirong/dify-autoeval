@@ -1,5 +1,5 @@
 import aiohttp
-
+import json
 class FetchLangfuse:
     """
     A class for fetching data from Langfuse API
