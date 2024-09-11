@@ -1,0 +1,7 @@
+LANGFUSE_PUBLIC_KEY: 
+LANGFUSE_SECRET_KEY: 
+LANGFUSE_HOST: http://localhost:3333
+
+DIFY_HOST: http://localhost:5888/v1
+DIFY_API_KEY: 
+
