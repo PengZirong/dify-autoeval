@@ -2,7 +2,7 @@
 Author: Pengzirong Peng.Zirong@outlook.com
 Date: 2024-09-06 14:21:58
 LastEditors: Pengzirong
-LastEditTime: 2024-09-09 14:56:46
+LastEditTime: 2024-09-11 09:21:41
 Description: file content
 '''
 # from fetch_langfuse import FetchLangfuse
@@ -151,3 +151,43 @@ async def async_pull_score_to_langfuse(score, trace_id, observation_id, name):
         async with session.post(url, auth=aiohttp.BasicAuth(public_key, screct_key), headers=headers, data=json.dumps(payload)) as response:
             return await response.text()
     
+
+async def send_chat_message(
+    url,
+    api_key,
+    query: str,
+    inputs={},
+    response_mode: ["streaming", "blocking"] = "blocking",
+    user: str = "abc-123",
+    file_array = []
+    ):
+    """Send a chat message.
+
+    Args:
+        url (str): The URL of the chat message API.
+        api_key (str): The API key for authentication.
+        query (str): The chat message query.
+        inputs (dict, optional): Additional inputs for the chat message. Defaults to {}.
+        response_mode (str, optional): The response mode for the chat message. Defaults to "blocking".
+        user (str, optional): The user identifier. Defaults to "abc-123".
+        file_array (list, optional): An array of files to be sent with the chat message. Defaults to [].
+
+    Returns:
+        dict: The response from the chat message API.
+    """
+    base_url = f"{url}/chat-messages"
+    headers = {
+        'Authorization': f'Bearer {api_key}',
+        'Content-Type': 'application/json'
+    }
+    payload = {
+        "inputs": inputs,
+        "query": query,
+        "response_mode": response_mode,
+        "conversation_id": "",
+        "user": user,
+        "files": file_array
+    }
+    async with aiohttp.ClientSession() as session:
+        async with session.post(base_url, headers=headers, json=payload) as response:
+            return await response.json()
