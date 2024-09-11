@@ -2,7 +2,7 @@
 Author: Pengzirong Peng.Zirong@outlook.com
 Date: 2024-09-11 09:10:02
 LastEditors: Pengzirong
-LastEditTime: 2024-09-11 18:34:28
+LastEditTime: 2024-09-11 19:22:22
 Description: file content
 '''
 
@@ -135,13 +135,17 @@ async def process_dataset(
             ragas_embedding))
         tasks.append(task)
 
-    await asyncio.gather(*tasks)
+    results = await asyncio.gather(*tasks)
+    
+    # 将所有 observations 和 expected_outputs 合并到两个列表中
+    all_observations = []
+    all_expected_outputs = []
+    for observations, expected_outputs in results:
+        all_observations.extend(observations)
+        all_expected_outputs.extend(expected_outputs)
+    
+    return all_observations, all_expected_outputs
 
-    for task in tasks:
-        observations, expected_outputs = await task
-        results.extend(zip(observations, expected_outputs))
-
-    return results
 
 
 def ragas_evaluation(observations, expected_output, metrics, llm, embedding):
@@ -190,22 +194,22 @@ async def process_item(
     
     await asyncio.sleep(10)
     
-    max_retries = 3
+    # max_retries = 5
     retry_delay = 10
-    observations = []
+    # observations = []
     
-    for attempt in range(max_retries):
+    while True:
         try:
             observations = await fetch_langfuse.get_trace_selected_observations(trace_id, rules)
             break
         except Exception as e:
-            if attempt < max_retries - 1:
-                print(f"An error occurred: {str(e)}")
-                print(f"Retrying in {retry_delay} seconds... (Attempt {attempt + 1}/{max_retries})")
-                await asyncio.sleep(retry_delay)
-            else:
-                print(f"Failed to fetch observations after {max_retries} attempts. Skipping this item.")
-                return
+            # if attempt < max_retries - 1:
+            print(f"An error occurred: {str(e)}")
+                # print(f"Retrying in {retry_delay} seconds... (Attempt {attempt + 1}/{max_retries})")
+            await asyncio.sleep(retry_delay)
+            # else:
+            #     print(f"Failed to fetch observations after {max_retries} attempts. Skipping this item.")
+            #     return
             
     # 在处理完所有 observations 后再调用 ragas_evaluation 进行批量处理
     for observation in observations:
@@ -220,7 +224,7 @@ async def process_item(
         )
     return observations, [expected_output] * len(observations)
 
-def process_llm_batch(
+async def process_eval(
     observations, 
     expected_outputs, 
     metrics, 
@@ -253,9 +257,10 @@ async def main():
         # context_utilization,
         faithfulness,
     ]
-    await process_dataset(
+    observations, expected_outputs = await process_dataset(
         dataset, run_name, 
         ragas_metrics, ragas_llm=llm, ragas_embedding=embedding)
+    await process_eval(observations, expected_outputs, ragas_metrics, llm, embedding)
     # Flush the langfuse client to ensure all data is sent to the server at the end of the experiment run
     langfuse.flush()
 
