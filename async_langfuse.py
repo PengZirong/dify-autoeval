@@ -178,6 +178,23 @@ class FetchLangfuse:
             if all(rule(item) for rule in rules):
                 selected_ids.append((item['id'], data.index(item)))
         return selected_ids
+    
+    def select_data(self, data, rules):
+        """
+        Select data based on rules
+
+        Args:
+            data (list): The data to filter
+            rules (list): A list of rules to filter the data
+
+        Returns:
+            list: A list of selected data
+        """
+        selected_data = []
+        for item in data:
+            if all(rule(item) for rule in rules):
+                selected_data.append(item)
+        return selected_data
 
     async def get_selected_observations(self, rules):
         """
@@ -223,6 +240,20 @@ class FetchLangfuse:
                 if selected_ids:
                     selected_observations.extend([await self.fetch_observation(selected_id[0]) for selected_id in selected_ids])
         return selected_observations
+    
+    async def get_trace_selected_observations(self, trace_id, rules):
+        """
+        Fetches selected observations based on given rules from a specific trace.
+
+        Args:
+            trace_id (str): The ID of the trace
+            rules (list): A list of rules to filter the observations
+
+        Returns:
+            list: A list of selected observations
+        """
+        observations = await self.fetch_trace_observations(trace_id)
+        return self.select_data(observations, rules)
     
     async def pull_score_to_langfuse(self, score, trace_id, observation_id, name):
         """
