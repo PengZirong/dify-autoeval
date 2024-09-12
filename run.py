@@ -2,7 +2,7 @@
 Author: Pengzirong Peng.Zirong@outlook.com
 Date: 2024-09-11 09:10:02
 LastEditors: Pengzirong
-LastEditTime: 2024-09-11 19:22:22
+LastEditTime: 2024-09-12 09:11:14
 Description: file content
 '''
 
@@ -152,11 +152,13 @@ def ragas_evaluation(observations, expected_output, metrics, llm, embedding):
     # async with semaphore: # 控制并发任务数量
         # async with evaluation_lock:
     batch = process_llm_batch(observations)
-    batch['ground_truth'] = [expected_output]
+    batch['ground_truth'] = expected_output
     batch_keys = batch.keys()
     batch = Dataset.from_dict(batch)
     scores = evaluate(batch, metrics=metrics, llm=llm, embeddings=embedding)
     scores.to_pandas()
+    scores['trace_id'] = observations['traceId']
+    scores['observation_id'] = observations['id']
     score_keys = [key for key in scores.keys() if key not in batch_keys]
     return scores, score_keys
 
@@ -227,21 +229,24 @@ async def process_item(
 async def process_eval(
     observations, 
     expected_outputs, 
-    metrics, 
-    llm, 
-    embedding):
+    ragas_metrics, 
+    ragas_llm, 
+    ragas_embedding):
     scores, score_keys = ragas_evaluation(
         observations, expected_outputs, ragas_metrics, ragas_llm, ragas_embedding
     )
-
-    for evaluation_key in score_keys:
-        score = scores[evaluation_key]
-        await fetch_langfuse.pull_score_to_langfuse(
-            score=score,
-            trace_id=trace_id,
-            observation_id=observation_id,
-            name=evaluation_key
-        )
+    
+    for _, row in scores.iterrows():
+        trace_id = row['trace_id']
+        observation_id = row['observation_id']
+        for evaluation_key in score_keys:
+            score = row[evaluation_key]
+            await fetch_langfuse.pull_score_to_langfuse(
+                score=score,
+                trace_id=trace_id,
+                observation_id=observation_id,
+                name=evaluation_key
+            )
 
         
 async def main():
