@@ -167,7 +167,7 @@ async def run_dify_app(query):
                 user="autoeval_dev")
             session_id = response['conversation_id']
             trace_id = response['message_id']
-            print(f"trace_id: {trace_id}")
+            # print(f"trace_id: {trace_id}")
             return session_id, trace_id
         except Exception as e:
             print(f"An error occurred: {str(e)}")
