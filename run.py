@@ -2,7 +2,7 @@
 Author: Pengzirong Peng.Zirong@outlook.com
 Date: 2024-09-11 09:10:02
 LastEditors: Pengzirong
-LastEditTime: 2024-09-12 09:11:14
+LastEditTime: 2024-09-12 09:22:01
 Description: file content
 '''
 
@@ -125,7 +125,7 @@ async def process_dataset(
     ragas_embedding):
     tasks = []
     results = []
-    for item in dataset.items[:5]:
+    for item in dataset.items[:1]:
         task = asyncio.create_task(
             process_item(
             item,
@@ -156,11 +156,10 @@ def ragas_evaluation(observations, expected_output, metrics, llm, embedding):
     batch_keys = batch.keys()
     batch = Dataset.from_dict(batch)
     scores = evaluate(batch, metrics=metrics, llm=llm, embeddings=embedding)
-    scores.to_pandas()
-    scores['trace_id'] = observations['traceId']
-    scores['observation_id'] = observations['id']
+    scores['trace_id'] = batch['trace_id']
+    scores['observation_id'] = batch['observation_id']
     score_keys = [key for key in scores.keys() if key not in batch_keys]
-    return scores, score_keys
+    return scores.to_pandas(), score_keys
 
 
 async def run_dify_app(query):
@@ -235,7 +234,7 @@ async def process_eval(
     scores, score_keys = ragas_evaluation(
         observations, expected_outputs, ragas_metrics, ragas_llm, ragas_embedding
     )
-    
+    print(f"Scores type: {type(scores)}")
     for _, row in scores.iterrows():
         trace_id = row['trace_id']
         observation_id = row['observation_id']
