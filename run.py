@@ -2,7 +2,7 @@
 Author: Pengzirong Peng.Zirong@outlook.com
 Date: 2024-09-11 09:10:02
 LastEditors: Pengzirong
-LastEditTime: 2024-09-12 09:22:01
+LastEditTime: 2024-09-12 09:31:52
 Description: file content
 '''
 
@@ -40,9 +40,6 @@ for key in config:
     print(f'{key}={config[key]}')
 
 langfuse = Langfuse()
-semaphore = asyncio.Semaphore(1)  # 控制并发任务数量
-evaluation_lock = asyncio.Lock()
-
 
 fetch_langfuse = FetchLangfuse(
         secret_key=os.getenv('LANGFUSE_SECRET_KEY'),
@@ -125,7 +122,7 @@ async def process_dataset(
     ragas_embedding):
     tasks = []
     results = []
-    for item in dataset.items[:1]:
+    for item in dataset.items[:5]:
         task = asyncio.create_task(
             process_item(
             item,
@@ -149,8 +146,6 @@ async def process_dataset(
 
 
 def ragas_evaluation(observations, expected_output, metrics, llm, embedding):
-    # async with semaphore: # 控制并发任务数量
-        # async with evaluation_lock:
     batch = process_llm_batch(observations)
     batch['ground_truth'] = expected_output
     batch_keys = batch.keys()
@@ -195,24 +190,14 @@ async def process_item(
     
     await asyncio.sleep(10)
     
-    # max_retries = 5
-    retry_delay = 10
-    # observations = []
-    
     while True:
         try:
             observations = await fetch_langfuse.get_trace_selected_observations(trace_id, rules)
             break
         except Exception as e:
-            # if attempt < max_retries - 1:
             print(f"An error occurred: {str(e)}")
-                # print(f"Retrying in {retry_delay} seconds... (Attempt {attempt + 1}/{max_retries})")
-            await asyncio.sleep(retry_delay)
-            # else:
-            #     print(f"Failed to fetch observations after {max_retries} attempts. Skipping this item.")
-            #     return
+            await asyncio.sleep(10)
             
-    # 在处理完所有 observations 后再调用 ragas_evaluation 进行批量处理
     for observation in observations:
         trace_id = observation['traceId']
         observation_id = observation['id']
@@ -234,7 +219,7 @@ async def process_eval(
     scores, score_keys = ragas_evaluation(
         observations, expected_outputs, ragas_metrics, ragas_llm, ragas_embedding
     )
-    print(f"Scores type: {type(scores)}")
+    # print(f"Scores type: {type(scores)}")
     for _, row in scores.iterrows():
         trace_id = row['trace_id']
         observation_id = row['observation_id']
@@ -252,7 +237,7 @@ async def main():
     from test_llm2 import llm, embedding
     
     dataset = langfuse.get_dataset("OAGD_妇产科")
-    run_name = "dify_app 2"
+    run_name = "dify_app"
     ragas_metrics = [
         answer_correctness,
         # answer_relevancy,
