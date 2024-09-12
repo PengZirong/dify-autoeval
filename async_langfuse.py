@@ -1,10 +1,11 @@
 import aiohttp
 import json
+import os
 class FetchLangfuse:
     """
     A class for fetching data from Langfuse API
     """
-    def __init__(self, secret_key, public_key, host):
+    def __init__(self, secret_key=None, public_key=None, host=None):
         """
         Initialize FetchLangfuse with secret key, public key, and host
 
@@ -13,9 +14,9 @@ class FetchLangfuse:
             public_key (str): The public key for authentication
             host (str): The host URL for the Langfuse API
         """
-        self.secret_key = secret_key
-        self.public_key = public_key
-        self.host = host
+        self.secret_key = secret_key or os.getenv('LANGFUSE_SECRET_KEY')
+        self.public_key = public_key or os.getenv('LANGFUSE_PUBLIC_KEY')
+        self.host = host or os.getenv('LANGFUSE_HOST')
 
     async def fetch_sessions(self):
         """
