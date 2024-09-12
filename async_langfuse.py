@@ -272,13 +272,15 @@ class FetchLangfuse:
             "Content-Type": "application/json"
         }
         payload = {
-            "id": f"{trace_id}-{observation_id}-{name}",
+            "id": f"{trace_id}-{observation_id}-{name}" if observation_id else f"{trace_id}-{name}",
             "traceId": trace_id,
             "name": name,
             "value": score,
             "observationId": observation_id,
             "comment": f"Last updated at {datetime.now().strftime('%Y/%m/%d %H:%M:%S')}",
         }
+        if observation_id is None:
+            del payload["observationId"]
         async with aiohttp.ClientSession() as session:
             async with session.post(url, auth=aiohttp.BasicAuth(self.public_key, self.secret_key), headers=headers, data=json.dumps(payload)) as response:
                 return await response.text()
