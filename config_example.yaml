@@ -1,10 +1,12 @@
-LANGFUSE_PUBLIC_KEY: 
-LANGFUSE_SECRET_KEY: 
-LANGFUSE_HOST: http://localhost:3333
+LANGFUSE_PUBLIC_KEY: pk-lf-
+LANGFUSE_SECRET_KEY: sk-lf-
+LANGFUSE_HOST: http://
 
-DIFY_API_BASE: http://localhost:5888/v1
+DIFY_API_BASE: http://localhost/v1
 DIFY_API_KEY: app-
 
-RAGAS_BASE_URL: http
-RAGAS_API_KEY: sk-
+RAGAS_BASE_URL: http://localhost/v1
+RAGAS_API_KEY: not used actually
+RAGAS_CRITIC_LLM: 
+RAGAS_EMBEDDING: bge-m3
 
