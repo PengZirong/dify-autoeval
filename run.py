@@ -2,7 +2,7 @@
 Author: Pengzirong Peng.Zirong@outlook.com
 Date: 2024-09-11 09:10:02
 LastEditors: Pengzirong
-LastEditTime: 2024-09-12 16:06:57
+LastEditTime: 2024-09-12 16:08:34
 Description: file content
 '''
 
@@ -123,7 +123,7 @@ async def process_dataset(
     ragas_embeddings):
     tasks = []
     results = []
-    for item in dataset.items[:2]:
+    for item in dataset.items:
         task = asyncio.create_task(
             process_item(
             item,
