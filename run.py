@@ -2,7 +2,7 @@
 Author: Pengzirong Peng.Zirong@outlook.com
 Date: 2024-09-11 09:10:02
 LastEditors: Pengzirong
-LastEditTime: 2024-09-12 09:31:52
+LastEditTime: 2024-09-12 16:06:57
 Description: file content
 '''
 
@@ -15,7 +15,7 @@ from datetime import datetime
 import yaml
 import aiohttp
 import json
-
+from tqdm import tqdm
 from utils import send_chat_message, process_llm_batch
 from rules import Rules
 
@@ -32,7 +32,8 @@ from ragas.metrics import (
 
 ############################################
 # step 0: load config and init langfuse
-with open('config.yaml', 'r') as file:
+config_file_path = 'config.yaml'
+with open(config_file_path, 'r') as file:
     config = yaml.load(file, Loader=yaml.FullLoader)
 
 for key in config:
@@ -59,7 +60,7 @@ def upload_dataset_to_langfuse():
     langfuse.create_dataset(
         name=ds_name_in_langfuse,
         # optional description
-        description="My first dataset",
+        description="妇产科问答数据集",
         # optional metadata
         metadata={
             "author": "Peng Zirong",
@@ -83,7 +84,7 @@ def upload_dataset_to_langfuse():
             expected_output=data["output"]
         )
 
-
+# upload_dataset_to_langfuse()
 ############################################
 # step 2: load dataset from langfuse
 # dataset = langfuse.get_dataset("OAGD_妇产科")
@@ -119,17 +120,17 @@ async def process_dataset(
     run_name, 
     ragas_metrics, 
     ragas_llm, 
-    ragas_embedding):
+    ragas_embeddings):
     tasks = []
     results = []
-    for item in dataset.items[:5]:
+    for item in dataset.items[:2]:
         task = asyncio.create_task(
             process_item(
             item,
             run_name,
             ragas_metrics, 
             ragas_llm, 
-            ragas_embedding))
+            ragas_embeddings))
         tasks.append(task)
 
     results = await asyncio.gather(*tasks)
@@ -145,12 +146,12 @@ async def process_dataset(
 
 
 
-def ragas_evaluation(observations, expected_output, metrics, llm, embedding):
+def ragas_evaluation(observations, expected_output, metrics, llm, embeddings):
     batch = process_llm_batch(observations)
     batch['ground_truth'] = expected_output
     batch_keys = batch.keys()
     batch = Dataset.from_dict(batch)
-    scores = evaluate(batch, metrics=metrics, llm=llm, embeddings=embedding)
+    scores = evaluate(batch, metrics=metrics, llm=llm, embeddings=embeddings)
     scores['trace_id'] = batch['trace_id']
     scores['observation_id'] = batch['observation_id']
     score_keys = [key for key in scores.keys() if key not in batch_keys]
@@ -179,13 +180,13 @@ async def process_item(
     run_name,
     ragas_metrics, 
     ragas_llm, 
-    ragas_embedding
+    ragas_embeddings
     ):
     query = item.input['ask']+'\n'+item.input['title'] if item.input['ask'] != '无' else item.input['title']
     expected_output = item.expected_output
     
     session_id, trace_id = await run_dify_app(query)
-    
+    print(f"trace_id: {trace_id}")
     rules = Rules().llm_rules
     
     await asyncio.sleep(10)
@@ -196,12 +197,13 @@ async def process_item(
             break
         except Exception as e:
             print(f"An error occurred: {str(e)}")
+            print("Retrying after 10 seconds...")
             await asyncio.sleep(10)
-            
+    
     for observation in observations:
         trace_id = observation['traceId']
         observation_id = observation['id']
-
+        
         item.link(
             trace_or_observation=None,
             run_name=run_name,
@@ -215,10 +217,12 @@ async def process_eval(
     expected_outputs, 
     ragas_metrics, 
     ragas_llm, 
-    ragas_embedding):
+    ragas_embeddings):
     scores, score_keys = ragas_evaluation(
-        observations, expected_outputs, ragas_metrics, ragas_llm, ragas_embedding
+        observations, expected_outputs, ragas_metrics, ragas_llm, ragas_embeddings
     )
+    # print(scores)
+    # print(score_keys)
     # print(f"Scores type: {type(scores)}")
     for _, row in scores.iterrows():
         trace_id = row['trace_id']
@@ -234,25 +238,28 @@ async def process_eval(
 
         
 async def main():
-    from test_llm2 import llm, embedding
+    from utils import get_ragas_llm_and_embeddings
+    llm, embeddings = get_ragas_llm_and_embeddings()
     
     dataset = langfuse.get_dataset("OAGD_妇产科")
-    run_name = "dify_app"
+    run_name = "glm4-chat CritcLLM glm4-chat"
+    # run_name = "glm4-chat test"
     ragas_metrics = [
         answer_correctness,
-        # answer_relevancy,
-        # context_precision,
-        # context_recall,
-        # context_utilization,
+        answer_relevancy,
+        context_precision,
+        context_recall,
+        context_utilization,
         faithfulness,
     ]
     observations, expected_outputs = await process_dataset(
         dataset, run_name, 
-        ragas_metrics, ragas_llm=llm, ragas_embedding=embedding)
-    await process_eval(observations, expected_outputs, ragas_metrics, llm, embedding)
+        ragas_metrics, ragas_llm=llm, ragas_embeddings=embeddings)
+    await process_eval(observations, expected_outputs, ragas_metrics, llm, embeddings)
     # Flush the langfuse client to ensure all data is sent to the server at the end of the experiment run
     langfuse.flush()
 
 if __name__ == "__main__":
     asyncio.run(main())
+
 
