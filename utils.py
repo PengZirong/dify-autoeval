@@ -2,11 +2,12 @@
 Author: Pengzirong Peng.Zirong@outlook.com
 Date: 2024-09-06 14:21:58
 LastEditors: Pengzirong
-LastEditTime: 2024-09-11 15:29:07
+LastEditTime: 2024-09-12 15:29:30
 Description: file content
 '''
 # from fetch_langfuse import FetchLangfuse
 import aiohttp
+import os
 
 def process_llm_batch(llm_observations):
     """Process a batch of LLM observations.
@@ -191,3 +192,33 @@ async def send_chat_message(
     async with aiohttp.ClientSession() as session:
         async with session.post(base_url, headers=headers, json=payload) as response:
             return await response.json()
+
+def get_ragas_llm_and_embeddings():
+    """Get Ragas LLM and Embeddings.
+
+    Returns:
+        tuple: A tuple containing the LLM and embeddings objects.
+    """
+    from ragas.llms import LangchainLLMWrapper
+    from ragas.embeddings import LangchainEmbeddingsWrapper
+    from langchain_openai.chat_models import ChatOpenAI
+    from langchain_openai.embeddings import OpenAIEmbeddings
+    llm = LangchainLLMWrapper(
+        ChatOpenAI(
+            model=os.getenv("RAGAS_CRITIC_LLM"),
+            openai_api_base=os.getenv("RAGAS_BASE_URL"),
+            openai_api_key=os.getenv("RAGAS_API_KEY"),
+            temperature=0,
+            max_tokens=None,
+            timeout=None,
+            max_retries=2,
+        )
+    )
+    embeddings = LangchainEmbeddingsWrapper(
+        OpenAIEmbeddings(
+            model=os.getenv("RAGAS_EMBEDDING"),
+            base_url=os.getenv("RAGAS_BASE_URL"),
+            api_key=os.getenv("RAGAS_API_KEY"),
+        )
+    )
+    return llm, embeddings
